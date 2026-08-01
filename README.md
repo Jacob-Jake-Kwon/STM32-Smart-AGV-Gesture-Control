@@ -1,246 +1,87 @@
-# STM32 Smart AGV with Autonomous Navigation & Gesture Control
+# STM32F411RE FreeRTOS Maze Car
 
-A FreeRTOS-based intelligent mobile robot built on the **STM32 Nucleo-F411RE** that supports both **autonomous maze navigation** and **wireless gesture-based manual control**.
+This project uses the working L298N motor-control base and adds three ultrasonic
+sensors, FreeRTOS tasks, local maze navigation, and blue-button start/stop.
 
-The robot autonomously navigates using three ultrasonic sensors while avoiding obstacles. It can also be switched into manual mode, where an **ESP32 + MPU6050 motion controller** communicates with the robot through an **HC-05 Bluetooth module**, allowing intuitive hand-gesture control.
-
----
-
-## Features
-
-- FreeRTOS multitasking architecture
-- Autonomous obstacle avoidance
-- 3 Ultrasonic Sensors
-- L298N motor driver
-- 4 TT DC motors
-- Bluetooth Manual Mode
-- ESP32 Motion Controller
-- MPU6050 Gesture Recognition
-- Automatic Bluetooth Reconnection
-- Manual Safety Override
-- Front Collision Prevention
-- Modular source code
-
----
-
-## Modes
-
-Blue USER Button cycles through:
-
-```
-STOP
-   ↓
-AUTO
-   ↓
-MANUAL
-   ↓
-STOP
-```
-
-### STOP
-
-- Motors disabled
-
-### AUTO
-
-- Autonomous maze navigation
-- Chooses safest direction using three ultrasonic sensors
-- Differential steering
-
-### MANUAL
-
-Controlled wirelessly through an ESP32 hand controller.
-
-The front ultrasonic sensor remains active as a collision safety feature.
-
----
+## L298N wiring
 
-# Hardware
+| L298N | STM32F411RE |
+|---|---|
+| ENA | PA8 / TIM1_CH1 |
+| IN1 | PA9 |
+| IN2 | PA10 |
+| ENB | PB4 / TIM3_CH1 |
+| IN3 | PB5 |
+| IN4 | PB6 |
+| GND | STM32 GND |
 
-## Robot
+Remove the ENA and ENB jumper caps when PWM pins are connected.
 
-- STM32 Nucleo-F411RE
-- L298N Dual H-Bridge
-- 4× TT Gear Motors
-- 3× HC-SR04 Ultrasonic Sensors
-- HC-05 Bluetooth Module
+## Ultrasonic wiring
 
-## Hand Controller
+| Sensor | TRIG | ECHO |
+|---|---|---|
+| Front | PB0 | PB10 |
+| Left | PB1 | PB12 |
+| Right | PB2 | PB13 |
 
-- ESP32 Dev Board
-- MPU6050
-- Li-ion Battery
+Typical HC-SR04 ECHO outputs are 5 V. Use a voltage divider on every ECHO line
+before connecting it to the STM32.
 
----
+Suggested sensor direction:
 
-# System Architecture
+- Front: straight ahead
+- Left: approximately 35–45 degrees left
+- Right: approximately 35–45 degrees right
 
-```
-              HAND CONTROLLER
+## Blue button
 
-      +-------------------------+
-      | ESP32                   |
-      | MPU6050                 |
-      | Bluetooth Classic       |
-      +------------+------------+
-                   |
-             HC-05 Bluetooth
-                   |
-                   |
-      +------------v------------+
-      | STM32 Nucleo F411RE     |
-      | FreeRTOS                |
-      +------------+------------+
-                   |
-          +--------+--------+
-          |                 |
-     AUTO MODE        MANUAL MODE
-          |                 |
- Ultrasonic Maze      Bluetooth Commands
- Navigation                 |
-          \                 /
-           \               /
-            +-------------+
-            | Motor Driver|
-            |   L298N      |
-            +-------------+
-                   |
-              4 TT Motors
-```
-
----
-
-# Bluetooth Commands
-
-The ESP32 transmits simple ASCII commands.
-
-| Command | Action |
-|----------|--------|
-| F | Forward |
-| B | Backward |
-| L | Rotate Left |
-| R | Rotate Right |
-| FL | Forward Left |
-| FR | Forward Right |
-| BL | Backward Left |
-| BR | Backward Right |
-| S | Stop |
-
----
-
-# Gesture Mapping
-
-| Hand Motion | Robot Action |
-|--------------|--------------|
-| Flat | Stop |
-| Tilt Forward | Forward |
-| Tilt Backward | Backward |
-| Tilt Left | Rotate Left |
-| Tilt Right | Rotate Right |
-| Forward + Left | Forward Left |
-| Forward + Right | Forward Right |
+The Nucleo blue USER button on PC13 toggles:
 
----
+- First press: start automatic driving
+- Second press: stop immediately
+- Further presses repeat start/stop
 
-# FreeRTOS Tasks
+The green status LED on PA5 is on while automatic driving is active.
 
-- ModeManagerTask
-- UltrasonicTask
-- AutoDriveTask
-- ManualDriveTask
-- BluetoothTask
+## Navigation behavior
 
----
+- Drives forward while the front is clear.
+- Corrects away from close side walls.
+- At a wide junction, it may select the side with substantially more space.
+- When the front is blocked, it compares left and right distance and turns
+  toward the more open side.
+- If all three directions are blocked, it reverses and then turns toward the
+  freer side.
+- Ultrasonic sensors are triggered one at a time to reduce acoustic cross-talk.
 
-# Autonomous Navigation
+## Import and build
 
-Three ultrasonic sensors continuously monitor the surroundings.
+1. Extract the ZIP.
+2. In STM32CubeIDE select:
+   `File > Import > General > Existing Projects into Workspace`
+3. Select the extracted `Auto_Car_Project` folder.
+4. Run `Project > Clean`.
+5. Run `Project > Build Project`.
+6. Flash and run on the NUCLEO-F411RE.
 
-The robot:
+The car boots stopped. Place it safely in the maze and press the blue button.
 
-- Detects frontal obstacles
-- Compares left and right clearance
-- Selects the direction with more available space
-- Uses differential steering to navigate through unknown environments
+## Tuning
 
----
+Navigation constants are in:
 
-# Manual Safety
+`Core/Inc/car_config.h`
 
-Even in Manual Mode:
+The most useful values are:
 
-- Front obstacle detection remains active
-- Unsafe forward commands are ignored
-- Robot automatically stops before collision
+- `FRONT_STOP_MM`
+- `FRONT_CLEAR_MM`
+- `SIDE_BLOCKED_MM`
+- `DRIVE_SPEED`
+- `TURN_SPEED`
+- `TURN_MIN_TIME_MS`
+- `TURN_MAX_TIME_MS`
 
----
-
-# Project Structure
-
-```
-Core/
-├── Inc/
-│   ├── auto_drive.h
-│   ├── bluetooth.h
-│   ├── manual_drive.h
-│   ├── mode_manager.h
-│   ├── motor.h
-│   └── ultrasonic.h
-│
-└── Src/
-    ├── auto_drive.c
-    ├── bluetooth.c
-    ├── manual_drive.c
-    ├── mode_manager.c
-    ├── motor.c
-    └── ultrasonic.c
-```
-
----
-
-# Future Improvements
-
-- PID Wall Following
-- IMU Sensor Fusion
-- SLAM Mapping
-- Camera Streaming
-- Path Planning
-- Firefighting Robot Conversion
-- Wi-Fi Telemetry Dashboard
-- Voice Commands
-- Mobile Application
-- ROS Integration
-
----
-
-# Technologies
-
-- STM32CubeIDE
-- STM32 HAL
-- FreeRTOS
-- C
-- ESP32 Arduino
-- Bluetooth Classic
-- MPU6050
-- HC-SR04
-- L298N
-
----
-
-# Demonstration
-
-Autonomous Navigation
-
-⬜
-
-Gesture Controlled Driving
-
-⬜
-
----
-
-## Author
-
-Jacob Kwon
-
-Built as a robotics and embedded systems project demonstrating autonomous navigation, real-time multitasking, wireless communication, and intuitive gesture-based robot control.
+Start with the wheels lifted and verify that forward, reverse, left pivot, and
+right pivot match the physical motor wiring.
