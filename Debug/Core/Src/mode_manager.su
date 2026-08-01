@@ -1,0 +1,2 @@
+../Core/Src/mode_manager.c:8:9:ModeManager_GetMode	4	static
+../Core/Src/mode_manager.c:27:6:ModeManagerTask	32	static

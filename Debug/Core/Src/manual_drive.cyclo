@@ -1,0 +1,2 @@
+../Core/Src/manual_drive.c:10:16:FrontSensorSafe	4
+../Core/Src/manual_drive.c:19:6:ManualDriveTask	14

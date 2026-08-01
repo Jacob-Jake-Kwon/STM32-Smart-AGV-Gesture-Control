@@ -1,0 +1,2 @@
+../Core/Src/manual_drive.c:10:16:FrontSensorSafe	16	static
+../Core/Src/manual_drive.c:19:6:ManualDriveTask	56	static

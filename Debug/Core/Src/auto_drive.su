@@ -1,0 +1,2 @@
+../Core/Src/auto_drive.c:47:16:SensorFresh	24	static
+../Core/Src/auto_drive.c:56:6:AutoDriveTask	72	static

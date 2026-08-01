@@ -1,0 +1,10 @@
+../Core/Src/motor.c:60:16:Motor_ClampCommand	16	static
+../Core/Src/motor.c:76:17:Motor_LimitMagnitude	16	static
+../Core/Src/motor.c:104:17:Motor_PercentToCompare	24	static
+../Core/Src/motor.c:126:13:Motor_SetLeftDirection	16	static
+../Core/Src/motor.c:208:13:Motor_SetRightDirection	16	static
+../Core/Src/motor.c:290:13:Motor_SetLeft	32	static
+../Core/Src/motor.c:332:13:Motor_SetRight	32	static
+../Core/Src/motor.c:374:6:Motor_Init	8	static
+../Core/Src/motor.c:402:6:Motor_Set	16	static
+../Core/Src/motor.c:445:6:Motor_Stop	8	static

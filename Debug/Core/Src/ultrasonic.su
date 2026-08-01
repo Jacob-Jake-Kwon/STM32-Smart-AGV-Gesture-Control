@@ -1,0 +1,7 @@
+../Core/Src/ultrasonic.c:11:17:TimerNowUs	4	static
+../Core/Src/ultrasonic.c:16:13:DelayUs	24	static,ignoring_inline_asm
+../Core/Src/ultrasonic.c:25:13:TriggerWrite	16	static
+../Core/Src/ultrasonic.c:46:22:EchoRead	16	static
+../Core/Src/ultrasonic.c:64:16:Measure	32	static
+../Core/Src/ultrasonic.c:110:6:Ultrasonic_Copy	16	static
+../Core/Src/ultrasonic.c:120:6:UltrasonicTask	32	static
